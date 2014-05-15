@@ -89,9 +89,8 @@ def run(mptcp, net):
     cmd = './client 10.0.0.4'
     h1.cmd(cmd)
     h1_out = h1.waitOutput()
-    h2.waitOutput()
     lg.info("client output:\n%s\n" % h1_out)
-    sleep(0.1)  # hack to wait for iperf server output.
+    sleep(2)  # hack to wait for server to finish
     out = h2.read(10000)
     lg.info("server output: %s\n" % out)
     return None
