@@ -15,7 +15,7 @@ from mininet.node import OVSKernelSwitch as Switch
 from mininet.link import Link, TCLink
 from mininet.util import makeNumeric, custom
 
-from topo import TwoHostNInterfaceTopo
+from topo import Wifi3GTopo
 
 # TODO: move to common location; code shared with DCTCP.
 def progress(t):
@@ -162,7 +162,7 @@ def genericTest(args, topo, setup, run, end):
 def main():
     args = parse_args()
     lg.setLogLevel('info')
-    topo = TwoHostNInterfaceTopo(n=args.n)
+    topo = Wifi3GTopo()
     genericTest(args, topo, setup, run, end)
 
 
