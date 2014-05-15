@@ -123,11 +123,11 @@ def run(args, net):
         h2_out = h2.cmd('ping -c 1 10.0.%i.3' % i)
         lg.info("ping test output: %s\n" % h2_out)
 
-    lg.info("iperfing")
-    h2.sendCmd('iperf -s -i 1')
+    lg.info("starting server")
+    h2.sendCmd('./server logfile')
 
-    cmd = 'iperf -c 10.0.0.4 -t %d -i 1' % seconds
-    h1.sendCmd(cmd)
+    cmd = './client 10.0.0.4'
+    h1.cmd(cmd)
     progress(seconds + 1)
     h1_out = h1.waitOutput()
     lg.info("client output:\n%s\n" % h1_out)
