@@ -102,8 +102,8 @@ def end():
 
 
 def genericTest(topo, setup, run, end):
-    net = Mininet(topo=topo)
-    setup()
+    net = Mininet(topo=topo, link=TCLink)
+    setup(True)
     net.start()
     data = run(True, net)
     net.stop()
