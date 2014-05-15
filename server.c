@@ -60,41 +60,39 @@ int main(int argc, char *argv[]) {
     if (ret == -1)
         error(1, errno, "could not mark socket as passive");
 
+    /* Loop forever */
     int connfd;
     struct sockaddr connaddr;
     socklen_t addrlen;
+    while ((connfd = accept(sockfd, &connaddr, &addrlen)) != -1) {
+        while (1) {
+            struct timeval tv;
+            size_t tv_size = sizeof tv;
+            unsigned char buf[BUF_SIZE];
+            int total_bytes_read = 0;
 
-    /* Accept one connection */
-    if ((connfd = accept(sockfd, &connaddr, &addrlen)) == -1) {
-        error(1, errno, "accept failed");
-    }
+            while (total_bytes_read < BUF_SIZE) {
+                int bytes_read = read(connfd, buf + total_bytes_read, BUF_SIZE - total_bytes_read);
 
-    while (1) {
-        struct timeval tv;
-        size_t tv_size = sizeof tv;
-        unsigned char buf[BUF_SIZE];
-        int total_bytes_read = 0;
+                if (bytes_read == -1)
+                    error(1, errno, "failed to read from socket");
 
-        while (total_bytes_read < BUF_SIZE) {
-            int bytes_read = read(connfd, buf + total_bytes_read, BUF_SIZE - total_bytes_read);
+                total_bytes_read += bytes_read;
+            }
 
-            if (bytes_read == -1)
-                error(1, errno, "failed to read from socket");
+            struct timeval now;
+            gettimeofday(&now, NULL);
 
-            total_bytes_read += bytes_read;
+            memcpy(&tv, buf, tv_size);
+
+            struct timeval tv_diff;
+            timersub(&now, &tv, &tv_diff);
+
+            fprintf(logfile, "%ld\n", tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000);
+            fflush(logfile);
         }
-
-        struct timeval now;
-        gettimeofday(&now, NULL);
-
-        memcpy(&tv, buf, tv_size);
-
-        struct timeval tv_diff;
-        timersub(&now, &tv, &tv_diff);
-
-        fprintf(logfile, "%ld\n", tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000);
     }
-    fclose(logfile);
+    error(1, errno, "accept failed");
 
     return 0;
 }
