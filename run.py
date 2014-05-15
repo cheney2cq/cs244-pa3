@@ -66,8 +66,8 @@ def run(mptcp, net):
         # Setup IPs:
         h1.cmdPrint('ifconfig h1-eth%i 10.0.%i.3 netmask 255.255.255.0' % (i, i))
         h2.cmdPrint('ifconfig h2-eth%i 10.0.%i.4 netmask 255.255.255.0' % (i, i))
-        h1.cmdPrint('ethtool -K h1-eth%i tso off') % i
-        h1.cmdPrint('ethtool -K h2-eth%i tso off') % i
+        h1.cmdPrint('ethtool -K h1-eth%i tso off' % i)
+        h1.cmdPrint('ethtool -K h2-eth%i tso off' % i)
 
         if mptcp:
             lg.info("configuring source-specific routing tables for MPTCP\n")
