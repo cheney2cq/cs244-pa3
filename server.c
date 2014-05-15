@@ -60,38 +60,41 @@ int main(int argc, char *argv[]) {
     if (ret == -1)
         error(1, errno, "could not mark socket as passive");
 
-    /* Loop forever */
     int connfd;
     struct sockaddr connaddr;
     socklen_t addrlen;
-    while ((connfd = accept(sockfd, &connaddr, &addrlen)) != -1) {
-        while (1) {
-            struct timeval tv;
-            size_t tv_size = sizeof tv;
-            unsigned char buf[BUF_SIZE];
-            int total_bytes_read = 0;
 
-            while (total_bytes_read < BUF_SIZE) {
-                int bytes_read = read(connfd, buf + total_bytes_read, BUF_SIZE - total_bytes_read);
-
-                if (bytes_read == -1)
-                    error(1, errno, "failed to read from socket");
-
-                total_bytes_read += bytes_read;
-            }
-
-            struct timeval now;
-            gettimeofday(&now, NULL);
-
-            memcpy(&tv, buf, tv_size);
-
-            struct timeval tv_diff;
-            timersub(&now, &tv, &tv_diff);
-
-            fprintf(logfile, "%ld\n", tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000);
-        }
+    /* Accept one connection */
+    if ((connfd = accept(sockfd, &connaddr, &addrlen)) == -1) {
+        error(1, errno, "accept failed");
     }
-    error(1, errno, "accept failed");
+
+    while (1) {
+        struct timeval tv;
+        size_t tv_size = sizeof tv;
+        unsigned char buf[BUF_SIZE];
+        int total_bytes_read = 0;
+
+        while (total_bytes_read < BUF_SIZE) {
+            int bytes_read = read(connfd, buf + total_bytes_read, BUF_SIZE - total_bytes_read);
+
+            if (bytes_read == -1)
+                error(1, errno, "failed to read from socket");
+
+            total_bytes_read += bytes_read;
+        }
+
+        struct timeval now;
+        gettimeofday(&now, NULL);
+
+        memcpy(&tv, buf, tv_size);
+
+        struct timeval tv_diff;
+        timersub(&now, &tv, &tv_diff);
+
+        fprintf(logfile, "%ld\n", tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000);
+    }
+    fclose(logfile);
 
     return 0;
 }
