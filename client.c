@@ -53,8 +53,10 @@ int main(int argc, char *argv[]) {
             int bytes_sent = write(sockfd, buf + total_bytes_sent, BUF_SIZE - total_bytes_sent);
 
             if (bytes_sent == -1)
-                if (errno == EAGAIN || errno == EWOULDBLOCK)
-                    break;
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    nanosleep(&sleep_time, NULL);
+                    continue;
+                }
                 else
                     error(1, errno, "failed to write to socket");
 
