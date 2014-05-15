@@ -53,61 +53,21 @@ def set_mptcp_ndiffports(ports):
     sysctl_set("net.mptcp.mptcp_ndiffports", ports)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="MPTCP 2-host n-switch test")
-    parser.add_argument('--bw', '-B',
-                        action="store",
-                        help="Bandwidth of links",
-                        required=True)
-
-    parser.add_argument('-n',
-                        action="store",
-                        help="Number of switches.  Must be >= 2",
-                        default=2)
-
-    parser.add_argument('-t',
-                        action="store",
-                        help="Seconds to run the experiment",
-                        default=2)
-
-    parser.add_argument('--mptcp',
-                        action="store_true",
-                        help="Enable MPTCP (net.mptcp.mptcp_enabled)",
-                        default=False)
-
-    parser.add_argument('--pause',
-                        action="store_true",
-                        help="Pause before test start & end (to use wireshark)",
-                        default=False)
-
-    parser.add_argument('--ndiffports',
-                        action="store",
-                        help="Set # subflows (net.mptcp.mptcp_ndiffports)",
-                        default=1)
-
-    args = parser.parse_args()
-    args.bw = float(args.bw)
-    args.n = int(args.n)
-    args.ndiffports = int(args.ndiffports)
-    return args
+def setup(mptcp):
+    set_mptcp_enabled(mptcp)
+    set_mptcp_ndiffports(1)
 
 
-def setup(args):
-    set_mptcp_enabled(args.mptcp)
-    set_mptcp_ndiffports(args.ndiffports)
-
-
-def run(args, net):
-    seconds = int(args.t)
+def run(mptcp, net):
     h1 = net.getNodeByName('h1')
     h2 = net.getNodeByName('h2')
 
-    for i in range(args.n):
+    for i in range(2):
         # Setup IPs:
         h1.cmdPrint('ifconfig h1-eth%i 10.0.%i.3 netmask 255.255.255.0' % (i, i))
         h2.cmdPrint('ifconfig h2-eth%i 10.0.%i.4 netmask 255.255.255.0' % (i, i))
 
-        if args.mptcp:
+        if mptcp:
             lg.info("configuring source-specific routing tables for MPTCP\n")
             # This creates two different routing tables, that we use based on the
             # source-address.
@@ -119,7 +79,7 @@ def run(args, net):
 
     # TODO: expand this to verify connectivity with a ping test.
     lg.info("pinging each destination interface\n")
-    for i in range(args.n):
+    for i in range(2):
         h2_out = h2.cmd('ping -c 1 10.0.%i.3' % i)
         lg.info("ping test output: %s\n" % h2_out)
 
@@ -128,7 +88,6 @@ def run(args, net):
 
     cmd = './client 10.0.0.4'
     h1.cmd(cmd)
-    progress(seconds + 1)
     h1_out = h1.waitOutput()
     lg.info("client output:\n%s\n" % h1_out)
     sleep(0.1)  # hack to wait for iperf server output.
@@ -137,33 +96,25 @@ def run(args, net):
     return None
 
 
-def end(args):
+def end():
     set_mptcp_enabled(False)
     set_mptcp_ndiffports(1)
 
 
-def genericTest(args, topo, setup, run, end):
-    link = custom(TCLink, bw=args.bw)
-    net = Mininet(topo=topo, switch=Switch, link=link)
-    setup(args)
+def genericTest(topo, setup, run, end):
+    net = Mininet(topo=topo)
+    setup()
     net.start()
-    if args.pause:
-        print "press enter to run test"
-        raw_input()
-    data = run(args, net)
-    if args.pause:
-        print "press enter to finish test"
-        raw_input()
+    data = run(True, net)
     net.stop()
-    end(args)
+    end()
     return data
 
 
 def main():
-    args = parse_args()
     lg.setLogLevel('info')
     topo = Wifi3GTopo()
-    genericTest(args, topo, setup, run, end)
+    genericTest(topo, setup, run, end)
 
 
 if __name__ == '__main__':
