@@ -71,6 +71,9 @@ int main(int argc, char *argv[]) {
             unsigned char buf[BUF_SIZE];
             int total_bytes_read = 0;
 
+            struct timeval now;
+            gettimeofday(&now, NULL);
+
             while (total_bytes_read < BUF_SIZE) {
                 int bytes_read = read(connfd, buf + total_bytes_read, BUF_SIZE - total_bytes_read);
 
@@ -79,9 +82,6 @@ int main(int argc, char *argv[]) {
 
                 total_bytes_read += bytes_read;
             }
-
-            struct timeval now;
-            gettimeofday(&now, NULL);
 
             memcpy(&tv, buf, tv_size);
 

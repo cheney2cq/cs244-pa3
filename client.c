@@ -33,12 +33,12 @@ int main(int argc, char *argv[]) {
     /* Sleep time between timestamps */
     struct timespec sleep_time;
     sleep_time.tv_sec = 0;
-    sleep_time.tv_nsec = 3000;
+    sleep_time.tv_nsec = 5000;
 
     struct timeval finish_time;
     gettimeofday(&finish_time, NULL);
 
-    finish_time.tv_sec += 30;
+    finish_time.tv_sec += 600;
 
     while (1) {
         struct timeval now;
@@ -62,6 +62,22 @@ int main(int argc, char *argv[]) {
 
             total_bytes_sent += bytes_sent;
         }
+	total_bytes_sent = 0;
+
+//        while (total_bytes_sent < tv_size) {
+//            int bytes_sent = write(sockfd, buf + total_bytes_sent, tv_size - total_bytes_sent);
+//
+//            if (bytes_sent == -1)
+//                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+//                    nanosleep(&sleep_time, NULL);
+//                    continue;
+//                }
+//                else
+//                    error(1, errno, "failed to write to socket");
+//
+//            total_bytes_sent += bytes_sent;
+//        }
+//
 
         if (timercmp(&now, &finish_time, >))
             return 0;

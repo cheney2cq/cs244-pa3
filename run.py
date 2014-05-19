@@ -58,14 +58,29 @@ def setup(mptcp):
     set_mptcp_ndiffports(1)
 
 
-def run(mptcp, net):
+def run(mptcp, net, type):
+    if type == 'wifi':
+        log = 'logfile_wifi'
+        ip = '10.0.0.4'
+    elif type == '3g':
+        log = 'logfile_3g'
+        ip = '10.0.1.4'
+    else:
+        log = 'logfile_mptcp'
+        ip = '10.0.0.4'
+
     h1 = net.getNodeByName('h1')
     h2 = net.getNodeByName('h2')
 
+    h1.cmdPrint('ifconfig')
+    h2.cmdPrint('ifconfig')
     for i in range(2):
         # Setup IPs:
         h1.cmdPrint('ifconfig h1-eth%i 10.0.%i.3 netmask 255.255.255.0' % (i, i))
         h2.cmdPrint('ifconfig h2-eth%i 10.0.%i.4 netmask 255.255.255.0' % (i, i))
+
+        h1.cmdPrint('ifconfig h1-eth%i txqueuelen 3' % (i, ))
+        h2.cmdPrint('ifconfig h2-eth%i txqueuelen 3' % (i, ))
 
         if mptcp:
             lg.info("configuring source-specific routing tables for MPTCP\n")
@@ -83,10 +98,14 @@ def run(mptcp, net):
         h2_out = h2.cmd('ping -c 1 10.0.%i.3' % i)
         lg.info("ping test output: %s\n" % h2_out)
 
+    tracepath = h2.cmd('tracepath 10.0.0.3')
+    tracepath2 = h2.cmd('tracepath 10.0.1.3')
+    lg.info("tracepath  test output: %s\n" % tracepath)
+    lg.info("tracepath2 test output: %s\n" % tracepath2)
     lg.info("starting server")
-    h2.sendCmd('./server logfile')
+    h2.sendCmd('./server %s' % log)
 
-    cmd = './client 10.0.0.4'
+    cmd = './client %s' % ip
     h1.cmd(cmd)
     h1_out = h1.waitOutput()
     lg.info("client output:\n%s\n" % h1_out)
@@ -98,14 +117,19 @@ def run(mptcp, net):
 
 def end():
     set_mptcp_enabled(False)
-    set_mptcp_ndiffports(1)
+    set_mptcp_ndiffports(0)
 
 
-def genericTest(topo, setup, run, end):
+def genericTest(topo, setup, run, end, type):
+    if type == 'wifi' or type == '3g':
+        mptcp = False
+    else:
+        mptcp = True
+
     net = Mininet(topo=topo, link=TCLink)
-    setup(True)
+    setup(mptcp)
     net.start()
-    data = run(True, net)
+    data = run(mptcp, net, type)
     net.stop()
     end()
     return data
@@ -114,7 +138,11 @@ def genericTest(topo, setup, run, end):
 def main():
     lg.setLogLevel('info')
     topo = Wifi3GTopo()
-    genericTest(topo, setup, run, end)
+
+    types = [ 'wifi', '3g', 'mptcp' ]
+    for type in types:
+        print "Running", type
+        genericTest(topo, setup, run, end, type)
 
 
 if __name__ == '__main__':
