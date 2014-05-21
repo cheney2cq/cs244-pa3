@@ -19,6 +19,6 @@ class Wifi3GTopo(Topo):
         # 3G link
         self.addLink(h1, s1, bw=2, delay='75ms', loss=1, max_queue_size=64)
 
-        self.addLink(s0, h2, bw=1000, delay='1ms', loss=0)
-        self.addLink(s1, h2, bw=1000, delay='1ms', loss=0)
+        self.addLink(s0, h2, bw=1000, delay='1ms', loss=0, max_queue_size=10)
+        self.addLink(s1, h2, bw=1000, delay='1ms', loss=0, max_queue_size=10)
 

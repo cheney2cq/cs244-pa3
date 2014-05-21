@@ -1,2 +1,5 @@
 /client
 /server
+*.png
+*.pyc
+logfile_*

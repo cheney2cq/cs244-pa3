@@ -55,7 +55,7 @@ def set_mptcp_ndiffports(ports):
 
 def setup(mptcp):
     set_mptcp_enabled(mptcp)
-    set_mptcp_ndiffports(1)
+    #set_mptcp_ndiffports(1)
 
 
 def run(mptcp, net, type):
@@ -117,7 +117,7 @@ def run(mptcp, net, type):
 
 def end():
     set_mptcp_enabled(False)
-    set_mptcp_ndiffports(0)
+    #set_mptcp_ndiffports(0)
 
 
 def genericTest(topo, setup, run, end, type):
