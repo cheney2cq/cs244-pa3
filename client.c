@@ -38,7 +38,13 @@ int main(int argc, char *argv[]) {
     struct timeval finish_time;
     gettimeofday(&finish_time, NULL);
 
-    finish_time.tv_sec += 600;
+    finish_time.tv_sec += 100;
+
+    int sendbuff = 200 * 1024;
+    ret = setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sendbuff, sizeof(sendbuff));
+    if (ret) {
+        error(1, errno, "could not set sockopt SO_SNDBUF");
+    }
 
     while (1) {
         struct timeval now;

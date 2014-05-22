@@ -58,8 +58,8 @@ def run(mptcp, net, type):
         h1.cmdPrint('ifconfig h1-eth%i 10.0.%i.3 netmask 255.255.255.0' % (i, i))
         h2.cmdPrint('ifconfig h2-eth%i 10.0.%i.4 netmask 255.255.255.0' % (i, i))
 
-        h1.cmdPrint('ifconfig h1-eth%i txqueuelen 3' % (i, ))
-        h2.cmdPrint('ifconfig h2-eth%i txqueuelen 3' % (i, ))
+        #h1.cmdPrint('ifconfig h1-eth%i txqueuelen 3' % (i, ))
+        #h2.cmdPrint('ifconfig h2-eth%i txqueuelen 3' % (i, ))
 
         if mptcp:
             lg.info("configuring source-specific routing tables for MPTCP\n")
