@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     /* Sleep time between timestamps */
     struct timespec sleep_time;
     sleep_time.tv_sec = 0;
-    sleep_time.tv_nsec = 5000;
+    sleep_time.tv_nsec = 1000;
 
     struct timeval finish_time;
     gettimeofday(&finish_time, NULL);

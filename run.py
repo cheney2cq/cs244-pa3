@@ -1,8 +1,5 @@
 #!/usr/bin/python
-"""
-Test to validate MPTCP operation across at least two links.
-"""
-
+import os
 import sys
 from subprocess import Popen, PIPE
 from time import sleep
@@ -16,15 +13,6 @@ from mininet.link import Link, TCLink
 from mininet.util import makeNumeric, custom
 
 from topo import Wifi3GTopo
-
-# TODO: move to common location; code shared with DCTCP.
-def progress(t):
-    while t > 0:
-        print T.colored('  %3d seconds left  \r' % (t), 'cyan'),
-        t -= 1
-        sys.stdout.flush()
-        sleep(1)
-    print '\r\n'
 
 def sysctl_set(key, value):
     """Issue systcl for given param to given value and check for error."""
@@ -46,17 +34,8 @@ def set_mptcp_enabled(enabled):
     lg.info("setting MPTCP enabled to %s\n" % e)
     sysctl_set('net.mptcp.mptcp_enabled', e)
 
-
-def set_mptcp_ndiffports(ports):
-    """Set ndiffports, the number of subflows to instantiate"""
-    lg.info("setting MPTCP ndiffports to %s\n" % ports)
-    sysctl_set("net.mptcp.mptcp_ndiffports", ports)
-
-
 def setup(mptcp):
     set_mptcp_enabled(mptcp)
-    #set_mptcp_ndiffports(1)
-
 
 def run(mptcp, net, type):
     if type == 'wifi':
@@ -92,33 +71,26 @@ def run(mptcp, net, type):
             h1.cmdPrint('ip route add 10.0.%i.0/24 dev %s scope link table %s' % (i, dev, table))
             h1.cmdPrint('ip route add default via 10.0.%i.1 dev %s table %s' % (i, dev, table))
 
-    # TODO: expand this to verify connectivity with a ping test.
+    # verify connectivity with a ping test.
     lg.info("pinging each destination interface\n")
     for i in range(2):
-        h2_out = h2.cmd('ping -c 1 10.0.%i.3' % i)
+        h2_out = h2.cmd('ping -c 3 10.0.%i.3' % i)
         lg.info("ping test output: %s\n" % h2_out)
 
-    tracepath = h2.cmd('tracepath 10.0.0.3')
-    tracepath2 = h2.cmd('tracepath 10.0.1.3')
-    lg.info("tracepath  test output: %s\n" % tracepath)
-    lg.info("tracepath2 test output: %s\n" % tracepath2)
-    lg.info("starting server")
+    lg.info("%s: starting server and client\n" % type)
     h2.sendCmd('./server %s' % log)
 
     cmd = './client %s' % ip
     h1.cmd(cmd)
     h1_out = h1.waitOutput()
-    lg.info("client output:\n%s\n" % h1_out)
     sleep(2)  # hack to wait for server to finish
     out = h2.read(10000)
-    lg.info("server output: %s\n" % out)
+    lg.info("%s run completed" % type)
     return None
 
 
 def end():
     set_mptcp_enabled(False)
-    #set_mptcp_ndiffports(0)
-
 
 def genericTest(topo, setup, run, end, type):
     if type == 'wifi' or type == '3g':
@@ -138,6 +110,10 @@ def genericTest(topo, setup, run, end, type):
 def main():
     lg.setLogLevel('info')
     topo = Wifi3GTopo()
+
+    # Compile client and server
+    os.system('gcc server.c -o server')
+    os.system('gcc client.c -o client')
 
     types = [ 'wifi', '3g', 'mptcp' ]
     for type in types:
