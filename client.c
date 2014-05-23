@@ -55,12 +55,14 @@ int main(int argc, char *argv[]) {
         gettimeofday(&now, NULL);
         memcpy(buf, &now, tv_size);
 
-        while (total_bytes_sent < BUF_SIZE) {
-            int bytes_sent = write(sockfd, buf + total_bytes_sent, BUF_SIZE - total_bytes_sent);
+        while (total_bytes_sent < BUF_SIZE - tv_size) {
+            int bytes_sent = write(sockfd, buf + total_bytes_sent, BUF_SIZE - total_bytes_sent - tv_size);
 
             if (bytes_sent == -1)
                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
                     nanosleep(&sleep_time, NULL);
+                    if (total_bytes_sent == 0)
+                        gettimeofday(&now, NULL);
                     continue;
                 }
                 else
@@ -68,22 +70,27 @@ int main(int argc, char *argv[]) {
 
             total_bytes_sent += bytes_sent;
         }
-	total_bytes_sent = 0;
+        total_bytes_sent = 0;
 
-//        while (total_bytes_sent < tv_size) {
-//            int bytes_sent = write(sockfd, buf + total_bytes_sent, tv_size - total_bytes_sent);
-//
-//            if (bytes_sent == -1)
-//                if (errno == EAGAIN || errno == EWOULDBLOCK) {
-//                    nanosleep(&sleep_time, NULL);
-//                    continue;
-//                }
-//                else
-//                    error(1, errno, "failed to write to socket");
-//
-//            total_bytes_sent += bytes_sent;
-//        }
-//
+        gettimeofday(&now, NULL);
+        memcpy(buf + BUF_SIZE - tv_size, &now, tv_size);
+
+        while (total_bytes_sent < tv_size) {
+            int bytes_sent = write(sockfd, buf + total_bytes_sent, tv_size - total_bytes_sent);
+
+            if (bytes_sent == -1)
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    nanosleep(&sleep_time, NULL);
+                    if (total_bytes_sent == 0)
+                        gettimeofday(&now, NULL);
+                    continue;
+                }
+                else
+                    error(1, errno, "failed to write to socket");
+
+            total_bytes_sent += bytes_sent;
+        }
+
 
         if (timercmp(&now, &finish_time, >))
             return 0;

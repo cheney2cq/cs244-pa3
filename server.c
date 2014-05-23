@@ -11,29 +11,6 @@
 
 #define BUF_SIZE 8192
 
-/* http://stackoverflow.com/questions/1858050/how-do-i-compare-two-timestamps-in-c */
-int timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y) {
-     /* Perform the carry for the later subtraction by updating y. */
-     if (x->tv_usec < y->tv_usec) {
-         int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
-         y->tv_usec -= 1000000 * nsec;
-         y->tv_sec += nsec;
-     }
-     if (x->tv_usec - y->tv_usec > 1000000) {
-         int nsec = (x->tv_usec - y->tv_usec) / 1000000;
-         y->tv_usec += 1000000 * nsec;
-         y->tv_sec -= nsec;
-     }
-
-     /* Compute the time remaining to wait.
-        tv_usec is certainly positive. */
-     result->tv_sec = x->tv_sec - y->tv_sec;
-     result->tv_usec = x->tv_usec - y->tv_usec;
-
-     /* Return 1 if result is negative. */
-     return x->tv_sec < y->tv_sec;
-}
-
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         error(1, 0, "logfile is required");
@@ -66,13 +43,12 @@ int main(int argc, char *argv[]) {
     socklen_t addrlen;
     while ((connfd = accept(sockfd, &connaddr, &addrlen)) != -1) {
         while (1) {
-            struct timeval tv;
-            size_t tv_size = sizeof tv;
+            struct timeval block_start, block_end;
+            size_t tv_size = sizeof block_start;
             unsigned char buf[BUF_SIZE];
             int total_bytes_read = 0;
 
             struct timeval now;
-            gettimeofday(&now, NULL);
 
             while (total_bytes_read < BUF_SIZE) {
                 int bytes_read = read(connfd, buf + total_bytes_read, BUF_SIZE - total_bytes_read);
@@ -82,11 +58,14 @@ int main(int argc, char *argv[]) {
 
                 total_bytes_read += bytes_read;
             }
+            gettimeofday(&now, NULL);
 
-            memcpy(&tv, buf, tv_size);
+            memcpy(&block_start, buf, tv_size);
+            memcpy(&block_end, buf + BUF_SIZE - tv_size, tv_size);
 
-            struct timeval tv_diff;
-            timersub(&now, &tv, &tv_diff);
+            struct timeval tv_diff, block_diff;
+            //timersub(&block_start, &block_end, &block_diff);
+            timersub(&now, &block_end, &tv_diff);
 
             fprintf(logfile, "%ld\n", tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000);
             fflush(logfile);
