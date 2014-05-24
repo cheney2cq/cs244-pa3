@@ -34,8 +34,17 @@ def set_mptcp_enabled(enabled):
     lg.info("setting MPTCP enabled to %s\n" % e)
     sysctl_set('net.mptcp.mptcp_enabled', e)
 
-def setup(mptcp):
+def set_optimizations_enabled(enabled):
+    """Enable MPTCP optimizations if true, disable if false"""
+    e = 1 if enabled else 0
+    lg.info("setting MPTCP opts to %s\n" % e)
+    sysctl_set('net.mptcp.mptcp_rbuf_opti', e)
+    sysctl_set('net.mptcp.mptcp_rbuf_penal', e)
+    sysctl_set('net.mptcp.mptcp_rbuf_retr', e)
+
+def setup(mptcp, optimizations):
     set_mptcp_enabled(mptcp)
+    set_optimizations_enabled(optimizations)
 
 def run(mptcp, net, type):
     if type == 'wifi':
@@ -45,7 +54,10 @@ def run(mptcp, net, type):
         log = 'logfile_3g'
         ip = '10.0.1.4'
     else:
-        log = 'logfile_mptcp'
+        if type == 'mptcp_noopt':
+            log = 'logfile_mptcp_noopt'
+        else:
+            log = 'logfile_mptcp'
         ip = '10.0.0.4'
 
     h1 = net.getNodeByName('h1')
@@ -58,8 +70,8 @@ def run(mptcp, net, type):
         h1.cmdPrint('ifconfig h1-eth%i 10.0.%i.3 netmask 255.255.255.0' % (i, i))
         h2.cmdPrint('ifconfig h2-eth%i 10.0.%i.4 netmask 255.255.255.0' % (i, i))
 
-        #h1.cmdPrint('ifconfig h1-eth%i txqueuelen 3' % (i, ))
-        #h2.cmdPrint('ifconfig h2-eth%i txqueuelen 3' % (i, ))
+        h1.cmdPrint('ifconfig h1-eth%i txqueuelen 50' % (i, ))
+        h2.cmdPrint('ifconfig h2-eth%i txqueuelen 50' % (i, ))
 
         if mptcp:
             lg.info("configuring source-specific routing tables for MPTCP\n")
@@ -98,8 +110,13 @@ def genericTest(topo, setup, run, end, type):
     else:
         mptcp = True
 
+    if type == 'mptcp_noopt':
+        optimizations = False
+    else:
+        optimizations = True
+
     net = Mininet(topo=topo, link=TCLink)
-    setup(mptcp)
+    setup(mptcp, optimizations)
     net.start()
     data = run(mptcp, net, type)
     net.stop()
@@ -115,7 +132,7 @@ def main():
     os.system('gcc server.c -o server')
     os.system('gcc client.c -o client')
 
-    types = [ 'wifi', '3g', 'mptcp' ]
+    types = [ 'wifi', '3g', 'mptcp', 'mptcp_noopt' ]
     for type in types:
         print "Running", type
         genericTest(topo, setup, run, end, type)

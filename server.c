@@ -42,6 +42,12 @@ int main(int argc, char *argv[]) {
     struct sockaddr connaddr;
     socklen_t addrlen;
     while ((connfd = accept(sockfd, &connaddr, &addrlen)) != -1) {
+        int recvbuf = 30 * 1024;
+        ret = setsockopt(connfd, SOL_SOCKET, SO_RCVBUF, &recvbuf, sizeof(recvbuf));
+        if (ret) {
+            error(1, errno, "could not set sockopt SO_RCVBUF");
+        }
+
         while (1) {
             struct timeval block_start, block_end;
             size_t tv_size = sizeof block_start;
