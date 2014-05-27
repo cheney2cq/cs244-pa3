@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     /* Sleep time between timestamps */
     struct timespec sleep_time;
     sleep_time.tv_sec = 0;
-    sleep_time.tv_nsec = 1000;
+    sleep_time.tv_nsec = 10000;
 
     struct timeval finish_time;
     gettimeofday(&finish_time, NULL);
@@ -61,8 +61,10 @@ int main(int argc, char *argv[]) {
             if (bytes_sent == -1)
                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
                     nanosleep(&sleep_time, NULL);
-                    if (total_bytes_sent == 0)
+                    if (total_bytes_sent == 0) {
                         gettimeofday(&now, NULL);
+                        memcpy(buf, &now, tv_size);
+                    }
                     continue;
                 }
                 else
@@ -73,10 +75,9 @@ int main(int argc, char *argv[]) {
         total_bytes_sent = 0;
 
         gettimeofday(&now, NULL);
-        memcpy(buf + BUF_SIZE - tv_size, &now, tv_size);
 
         while (total_bytes_sent < tv_size) {
-            int bytes_sent = write(sockfd, buf + total_bytes_sent, tv_size - total_bytes_sent);
+            int bytes_sent = write(sockfd, (unsigned char *)&now + total_bytes_sent, tv_size - total_bytes_sent);
 
             if (bytes_sent == -1)
                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
