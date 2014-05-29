@@ -11,6 +11,8 @@
 #include <sys/types.h>
 
 #define BUF_SIZE 8192
+#define TIME_SECS 100
+#define SNDBUF_SIZE_KB 200
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -38,9 +40,9 @@ int main(int argc, char *argv[]) {
     struct timeval finish_time;
     gettimeofday(&finish_time, NULL);
 
-    finish_time.tv_sec += 100;
+    finish_time.tv_sec += TIME_SECS;
 
-    int sendbuff = 200 * 1024;
+    int sendbuff = SNDBUF_SIZE_KB * 1024;
     ret = setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &sendbuff, sizeof(sendbuff));
     if (ret) {
         error(1, errno, "could not set sockopt SO_SNDBUF");

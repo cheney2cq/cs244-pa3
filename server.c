@@ -10,6 +10,7 @@
 #include <sys/types.h>
 
 #define BUF_SIZE 8192
+#define RCVBUF_SIZE_KB 30
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr connaddr;
     socklen_t addrlen;
     while ((connfd = accept(sockfd, &connaddr, &addrlen)) != -1) {
-        int recvbuf = 30 * 1024;
+        int recvbuf = RCVBUF_SIZE_KB * 1024;
         ret = setsockopt(connfd, SOL_SOCKET, SO_RCVBUF, &recvbuf, sizeof(recvbuf));
         if (ret) {
             error(1, errno, "could not set sockopt SO_RCVBUF");
