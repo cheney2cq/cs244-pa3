@@ -14,9 +14,9 @@ class Wifi3GTopo(Topo):
         s1 = self.addSwitch('s1')
 
         # WiFi link
-        self.addLink(h1, s0, bw=20, delay='5ms', loss=0.5, jitter='0ms', max_queue_size=1000)
+        self.addLink(h1, s0, bw=30, delay='5ms', loss=0.85, jitter='0ms', max_queue_size=1000)
         # 3G link
-        self.addLink(h1, s1, bw=2, delay='65ms', loss=0.5, jitter='35ms', max_queue_size=1000)
+        self.addLink(h1, s1, bw=15, delay='50ms', loss=0.1, jitter='100ms', max_queue_size=1000)
 
         self.addLink(s0, h2, bw=1000, delay='1ms', loss=0, max_queue_size=10)
         self.addLink(s1, h2, bw=1000, delay='1ms', loss=0, max_queue_size=10)

@@ -53,8 +53,8 @@ def plot_file(type):
 types = ['wifi', '3g', 'mptcp', 'mptcp_noopt']
 
 matplotlib.pyplot.figure(figsize=(12, 6), dpi=200)
-matplotlib.pyplot.xlim(0.0, 4000)
-matplotlib.pyplot.ylim(0.0, 0.15)
+matplotlib.pyplot.xlim(0.0, 2500)
+matplotlib.pyplot.ylim(0.0, 0.18)
 matplotlib.pyplot.title('Application level latency for 3G/WiFi')
 matplotlib.pyplot.xlabel('Latency (ms)')
 matplotlib.pyplot.ylabel('PDF')
