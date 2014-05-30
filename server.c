@@ -71,7 +71,6 @@ int main(int argc, char *argv[]) {
             memcpy(&block_end, buf + BUF_SIZE - tv_size, tv_size);
 
             struct timeval tv_diff, block_diff;
-            //timersub(&block_start, &block_end, &block_diff);
             timersub(&now, &block_end, &tv_diff);
 
             fprintf(logfile, "%ld\n", tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000);
