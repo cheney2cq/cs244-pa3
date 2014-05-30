@@ -1,0 +1,85 @@
+diff -Nur mptcp_2014_05_19/include/net/mptcp.h mptcp_patched/include/net/mptcp.h
+--- mptcp_2014_05_19/include/net/mptcp.h	2014-05-14 14:50:24.000000000 +0000
++++ mptcp_patched/include/net/mptcp.h	2014-05-20 08:44:10.928529136 +0000
+@@ -651,6 +651,9 @@
+ extern int sysctl_mptcp_checksum;
+ extern int sysctl_mptcp_debug;
+ extern int sysctl_mptcp_syn_retries;
++extern int sysctl_mptcp_rbuf_opti;
++extern int sysctl_mptcp_rbuf_penal;
++extern int sysctl_mptcp_rbuf_retr;
+ 
+ extern struct workqueue_struct *mptcp_wq;
+ 
+diff -Nur mptcp_2014_05_19/net/mptcp/mptcp_ctrl.c mptcp_patched/net/mptcp/mptcp_ctrl.c
+--- mptcp_2014_05_19/net/mptcp/mptcp_ctrl.c	2014-05-14 14:50:24.000000000 +0000
++++ mptcp_patched/net/mptcp/mptcp_ctrl.c	2014-05-20 08:45:50.492529136 +0000
+@@ -66,6 +66,9 @@
+ int sysctl_mptcp_debug __read_mostly;
+ EXPORT_SYMBOL(sysctl_mptcp_debug);
+ int sysctl_mptcp_syn_retries __read_mostly = 3;
++int sysctl_mptcp_rbuf_opti __read_mostly = 1;
++int sysctl_mptcp_rbuf_retr __read_mostly = 1;
++int sysctl_mptcp_rbuf_penal __read_mostly = 1;
+ 
+ bool mptcp_init_failed __read_mostly;
+ 
+@@ -123,6 +126,27 @@
+ 		.maxlen		= MPTCP_PM_NAME_MAX,
+ 		.proc_handler	= proc_mptcp_path_manager,
+ 	},
++	{
++		.procname = "mptcp_rbuf_opti",
++		.data = &sysctl_mptcp_rbuf_opti,
++		.maxlen = sizeof(int),
++		.mode = 0644,
++		.proc_handler = &proc_dointvec
++	},
++	{
++		.procname = "mptcp_rbuf_retr",
++		.data = &sysctl_mptcp_rbuf_retr,
++		.maxlen = sizeof(int),
++		.mode = 0644,
++		.proc_handler = &proc_dointvec
++	},
++	{
++		.procname = "mptcp_rbuf_penal",
++		.data = &sysctl_mptcp_rbuf_penal,
++		.maxlen = sizeof(int),
++		.mode = 0644,
++		.proc_handler = &proc_dointvec
++	},
+ 	{ }
+ };
+ 
+diff -Nur mptcp_2014_05_19/net/mptcp/mptcp_output.c mptcp_patched/net/mptcp/mptcp_output.c
+--- mptcp_2014_05_19/net/mptcp/mptcp_output.c	2014-05-14 14:50:24.000000000 +0000
++++ mptcp_patched/net/mptcp/mptcp_output.c	2014-05-20 08:47:04.252529136 +0000
+@@ -1007,7 +1007,7 @@
+ 	struct tcp_sock *tp = tcp_sk(sk), *tp_it;
+ 	struct sk_buff *skb_head;
+ 
+-	if (tp->mpcb->cnt_subflows == 1)
++	if (!sysctl_mptcp_rbuf_opti || tp->mpcb->cnt_subflows == 1)
+ 		return NULL;
+ 
+ 	meta_sk = mptcp_meta_sk(sk);
+@@ -1024,6 +1024,9 @@
+ 	if (!penal && sk_stream_memory_free(meta_sk))
+ 		goto retrans;
+ 
++	if (!sysctl_mptcp_rbuf_penal)
++		goto retrans;
++
+ 	/* Only penalize again after an RTT has elapsed */
+ 	if (tcp_time_stamp - tp->mptcp->last_rbuf_opti < tp->srtt >> 3)
+ 		goto retrans;
+@@ -1044,6 +1047,8 @@
+ 	}
+ 
+ retrans:
++   if (!sysctl_mptcp_rbuf_retr)
++       return NULL;
+ 
+ 	/* Segment not yet injected into this path? Take it!!! */
+ 	if (!(TCP_SKB_CB(skb_head)->path_mask & mptcp_pi_to_flag(tp->mptcp->path_index))) {

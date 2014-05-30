@@ -1,0 +1,13 @@
+diff --git a/mininet/link.py b/mininet/link.py
+index be73d52..faee24d 100644
+--- a/mininet/link.py
++++ b/mininet/link.py
+@@ -244,7 +244,7 @@ def delayCmds( parent, delay=None, jitter=None,
+             netemargs = '%s%s%s%s' % (
+                 'delay %s ' % delay if delay is not None else '',
+                 '%s ' % jitter if jitter is not None else '',
+-                'loss %d ' % loss if loss is not None else '',
++                'loss %f%s ' % (loss, '%%') if loss is not None else '',
+                 'limit %d' % max_queue_size if max_queue_size is not None
+                 else '' )
+             if netemargs:
