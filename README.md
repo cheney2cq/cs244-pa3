@@ -22,7 +22,7 @@ python -m SimpleHTTPServer
 ```
 
 The resulting plot of the probability density function for application latency
-is stored in pdf_smooth_all.png
+is stored in `pdf_smooth_all.png`.
 
 Running the experiment from scratch
 -----------------------------------
