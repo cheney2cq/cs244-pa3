@@ -1,3 +1,11 @@
+/*
+ * The server will listen on port 5000 for incoming connections, and will write the
+ * difference between the time a block was received and when it was accepted by
+ * the sender's TCP stack to a logfile.
+ *
+ * Written by CJ Cullen and Stephen Barber for CS 244 at Stanford, Spring 2014
+ *
+ */
 #include <errno.h>
 #include <error.h>
 #include <stdio.h>

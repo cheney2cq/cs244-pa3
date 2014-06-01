@@ -1,3 +1,12 @@
+/*
+ * Client will connect to the server on port 5000 and send 8 KB blocks with
+ * timestamps at the beginning and end of the block. The beginning timestamp
+ * is unused now; the end timestamp signifies the time the entire 8 KB block
+ * was accepted by the TCP stack for transmission.
+ *
+ * Written by CJ Cullen and Stephen Barber for CS 244 at Stanford, Spring 2014
+ *
+ */
 #include <errno.h>
 #include <error.h>
 #include <stdio.h>
