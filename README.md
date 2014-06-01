@@ -58,7 +58,7 @@ CONFIG_DEFAULT_MPTCP_PM="fullmesh"
 
 A sample kernel config (`config-3.14.0-mptcp`) is included for convenience.
 
-A patch (mininet-loss-rate.patch) is included for mininet to add support for
+A patch (`mininet-loss-rate.patch`) is included for mininet to add support for
 non-integer link loss rates.
 This should apply cleanly against commit
 `5797f5852ec2edf31ce3e0986b6ba15e95ecfd37` in the `master` branch of
