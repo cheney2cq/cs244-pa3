@@ -81,7 +81,11 @@ args = parser.parse_args()
 
 net = None
 
+signames = dict((k, v) for v, k in signal.__dict__.iteritems() if v.startswith('SIG'))
+
 def signal_cleanup(signum, frame):
+    global signames
+    lg.info("Received signal: %s\n" % signames[signum])
     if net is not None:
         net.stop()
     sys.exit(1)
@@ -160,15 +164,15 @@ def run(mptcp, net, type):
         lg.info("ping test output: %s\n" % h2_out)
 
     lg.info("%s: starting server and client\n" % type)
-    h2.sendCmd('./server %s' % log)
-
-    cmd = './client %s' % ip
-    h1.cmd(cmd)
-    h1_out = h1.waitOutput()
-    sleep(2)  # hack to wait for server to finish
-    out = h2.read(10000)
-    lg.info("%s run completed" % type)
-    return None
+    server = h2.popen('./server', log)
+    client = h1.popen('./client', ip)
+    retcode = client.wait()
+    if retcode != 0:
+        return False
+    sleep(2)
+    server.terminate()
+    lg.info("%s run completed\n" % type)
+    return True
 
 
 def end():
@@ -186,18 +190,14 @@ def genericTest(topo, setup, run, end, type):
     else:
         optimizations = True
 
-    signal.signal(signal.SIGABRT, signal_cleanup)
-    signal.signal(signal.SIGHUP, signal_cleanup)
-    signal.signal(signal.SIGINT, signal_cleanup)
-    signal.signal(signal.SIGTERM, signal_cleanup)
-
     net = Mininet(topo=topo, link=TCLink)
     setup(mptcp, optimizations)
     net.start()
-    data = run(mptcp, net, type)
+    success = run(mptcp, net, type)
     net.stop()
     end()
-    return data
+
+    return success
 
 
 def main():
@@ -215,10 +215,24 @@ def main():
     os.system('gcc server.c -o server')
     os.system('gcc client.c -o client')
 
+    signal.signal(signal.SIGABRT, signal_cleanup)
+    signal.signal(signal.SIGHUP, signal_cleanup)
+    signal.signal(signal.SIGINT, signal_cleanup)
+    signal.signal(signal.SIGTERM, signal_cleanup)
+
     types = [ 'wifi', '3g', 'mptcp', 'mptcp_noopt' ]
+    trylimit = 3
     for type in types:
-        print "Running", type
-        genericTest(topo, setup, run, end, type)
+        lg.info("Running %s\n" % type)
+        success = False
+        tries = 0
+        while not success and tries < trylimit:
+            success = genericTest(topo, setup, run, end, type)
+            tries += 1
+            if not success:
+                lg.info("Test failed to run, retrying (%d tries remaining)\n" % (trylimit - tries,))
+
+    return 0
 
 
 if __name__ == '__main__':

@@ -14,15 +14,18 @@ Running the experiment on Amazon EC2
 This experiment is published on Amazon EC2 under *ami to be determined*. We used
 a c3.large instance - results may vary depending on the instance.
 
-Running the experiment is simple - in the pa3 directory, do
+Running the experiment is simple - in the pa3 directory, simply run
 ```sh
-sudo python run.py
-python plot.py
+sudo ./run_all.sh
 python -m SimpleHTTPServer
 ```
 
-The resulting plot of the probability density function for application latency
-is stored in `pdf_smooth_all.png`.
+After the script finishes running (~25 minutes), you'll find several png files
+
+- `fig7.png` A faithful reproduction of Figure 7 from the paper.
+- `fig7_j150.png` Figure 7 with 3G jitter raised to 150ms
+- `fig7_j200.png` Figure 7 with 3G jitter raised to 200ms
+- `fig7_j250.png` Figure 7 with 3G jitter raised to 250ms
 
 Running the experiment from scratch
 -----------------------------------
@@ -55,11 +58,11 @@ should be installed with the util/install.sh script.
 
 Tweakable values
 ----------------
-`topo.py` contains the topology for the experiment - link loss rates, bandwidth,
-latency, and jitter can be set here.
+`run.py` accepts arguments for bandwidth, latency, jitter, and loss rates of
+both WiFi and 3G links. Run `python run.py -h` to see available arguments.
 
-`client.c` has defined constants for TCP send buffer size (default 200 KB) and the time to run
-the experiment (default 100 seconds).
+`client.c` has defined constants for TCP send buffer size (default 200 KB) and
+the time to run the experiment (default 100 seconds).
 
 `server.c` has a defined constant for the TCP receive buffer size (default 30
 KB).

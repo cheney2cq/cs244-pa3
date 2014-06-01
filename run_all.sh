@@ -9,7 +9,7 @@ if [ "`id -u`" -ne 0 ]; then
 fi
 
 # Clean up any subprocesses left lying around
-trap "kill 0" exit CHLD INT HUP TERM
+trap "set +e; trap - INT HUP TERM; kill 0; exit 1" INT HUP TERM
 
 # Run standard tests
 python2 run.py
