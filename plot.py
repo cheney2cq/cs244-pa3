@@ -1,19 +1,16 @@
 #!/usr/bin/env python
+# Written by CJ Cullen and Stephen Barber for CS 244 at Stanford, Spring 2014
 import matplotlib
 matplotlib.use('Agg')
 import pylab
 
 import numpy as np
 from scipy.interpolate import spline
+
+import sys
+
 def plot_file(type):
-    if type == 'wifi':
-        filename = 'logfile_wifi'
-    elif type == '3g':
-        filename = 'logfile_3g'
-    elif type == 'mptcp_noopt':
-        filename = 'logfile_mptcp_noopt'
-    else:
-        filename = 'logfile_mptcp'
+    filename = 'logfile_%s' % (type,)
 
     diffs_file = open(filename, 'r')
 
@@ -39,16 +36,7 @@ def plot_file(type):
 
     buckets_smooth = spline(ms_buckets, buckets, ms_x)
 
-#    matplotlib.pyplot.clf()
     matplotlib.pyplot.plot(ms_x, buckets_smooth, label=type)
-
-#    matplotlib.pyplot.clf()
-#    matplotlib.pyplot.plot(ms_buckets, buckets)
-#    matplotlib.pyplot.savefig('pdf_%s.png' % type)
-#
-#    matplotlib.pyplot.clf()
-#    matplotlib.pyplot.hist(diffs, num_buckets)
-#    matplotlib.pyplot.savefig('hist_%s.png' % type)
 
 types = ['wifi', '3g', 'mptcp', 'mptcp_noopt']
 
@@ -63,4 +51,9 @@ for type in types:
     plot_file(type)
 
 matplotlib.pyplot.legend()
-matplotlib.pyplot.savefig('pdf_smooth_all.png')
+if len(sys.argv) > 1:
+    out_filename = 'fig7_%s.png' % (sys.argv[1])
+else:
+    out_filename = 'fig7.png'
+
+matplotlib.pyplot.savefig(out_filename)

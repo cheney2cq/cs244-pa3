@@ -1,5 +1,9 @@
 #!/usr/bin/python
+# Written by CJ Cullen and Stephen Barber for CS 244 at Stanford, Spring 2014
+# Partially based on code from AMI ID ami-9e7ce9ae from an earlier quarter
+
 import os
+import signal
 import sys
 from subprocess import Popen, PIPE
 from time import sleep
@@ -13,6 +17,74 @@ from mininet.link import Link, TCLink
 from mininet.util import makeNumeric, custom
 
 from topo import Wifi3GTopo
+
+from argparse import ArgumentParser
+
+parser = ArgumentParser(description="MPTCP WiFi/3G Latency tests")
+parser.add_argument('--bw-wifi',
+                    dest="bw_wifi",
+                    type=float,
+                    action="store",
+                    help="Bandwidth of WiFi link (Mbps)",
+                    default=30)
+
+parser.add_argument('--bw-3g',
+                    dest="bw_3g",
+                    type=float,
+                    action="store",
+                    help="Bandwidth of 3G link (Mbps)",
+                    default=3)
+
+parser.add_argument('--latency-wifi',
+                    dest="latency_wifi",
+                    type=float,
+                    action="store",
+                    help="Latency of WiFi link (ms)",
+                    default=5)
+
+parser.add_argument('--latency-3g',
+                    dest="latency_3g",
+                    type=float,
+                    action="store",
+                    help="Latency of 3G link (ms)",
+                    default=30)
+
+parser.add_argument('--loss-wifi',
+                    dest="loss_wifi",
+                    type=float,
+                    action="store",
+                    help="Loss rate of WiFi link (0.0-1.0)",
+                    default=0.75)
+
+parser.add_argument('--loss-3g',
+                    dest="loss_3g",
+                    type=float,
+                    action="store",
+                    help="Loss rate of 3G link (0.0-1.0)",
+                    default=0.1)
+
+parser.add_argument('--jitter-wifi',
+                    dest="jitter_wifi",
+                    type=float,
+                    action="store",
+                    help="Jitter of WiFi link (ms)",
+                    default=0.0)
+
+parser.add_argument('--jitter-3g',
+                    dest="jitter_3g",
+                    type=float,
+                    action="store",
+                    help="Jitter of 3G link (ms)",
+                    default=100.0)
+
+args = parser.parse_args()
+
+net = None
+
+def signal_cleanup(signum, frame):
+    if net is not None:
+        net.stop()
+    sys.exit(1)
 
 def sysctl_set(key, value):
     """Issue systcl for given param to given value and check for error."""
@@ -63,8 +135,6 @@ def run(mptcp, net, type):
     h1 = net.getNodeByName('h1')
     h2 = net.getNodeByName('h2')
 
-    h1.cmdPrint('ifconfig')
-    h2.cmdPrint('ifconfig')
     for i in range(2):
         # Setup IPs:
         h1.cmdPrint('ifconfig h1-eth%i 10.0.%i.3 netmask 255.255.255.0' % (i, i))
@@ -105,6 +175,7 @@ def end():
     set_mptcp_enabled(False)
 
 def genericTest(topo, setup, run, end, type):
+    global net
     if type == 'wifi' or type == '3g':
         mptcp = False
     else:
@@ -114,6 +185,11 @@ def genericTest(topo, setup, run, end, type):
         optimizations = False
     else:
         optimizations = True
+
+    signal.signal(signal.SIGABRT, signal_cleanup)
+    signal.signal(signal.SIGHUP, signal_cleanup)
+    signal.signal(signal.SIGINT, signal_cleanup)
+    signal.signal(signal.SIGTERM, signal_cleanup)
 
     net = Mininet(topo=topo, link=TCLink)
     setup(mptcp, optimizations)
@@ -126,7 +202,14 @@ def genericTest(topo, setup, run, end, type):
 
 def main():
     lg.setLogLevel('info')
-    topo = Wifi3GTopo()
+    topo = Wifi3GTopo(bw_wifi=args.bw_wifi,
+                      bw_3g=args.bw_3g,
+                      latency_wifi='%fms' % (args.latency_wifi,),
+                      latency_3g='%fms' % (args.latency_3g,),
+                      loss_wifi=args.loss_wifi,
+                      loss_3g=args.loss_3g,
+                      jitter_wifi='%fms' % (args.jitter_wifi,),
+                      jitter_3g='%fms' % (args.jitter_3g,))
 
     # Compile client and server
     os.system('gcc server.c -o server')
