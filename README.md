@@ -14,11 +14,14 @@ Running the experiment on Amazon EC2
 This experiment is published on Amazon EC2 under *ami to be determined*. We used
 a c3.large instance - results may vary depending on the instance.
 
-Running the experiment is simple - in the pa3 directory, simply run
+Running the experiment is simple - in the pa3 directory, simply do
 ```sh
 sudo ./run_all.sh
 python -m SimpleHTTPServer
 ```
+
+This runs the base experiment, as well as the sensitivity analysis for jitter
+over 3G.
 
 After the script finishes running (~25 minutes), you'll find several png files
 
@@ -26,6 +29,12 @@ After the script finishes running (~25 minutes), you'll find several png files
 - `fig7_j150.png` Figure 7 with 3G jitter raised to 150ms
 - `fig7_j200.png` Figure 7 with 3G jitter raised to 200ms
 - `fig7_j250.png` Figure 7 with 3G jitter raised to 250ms
+
+A single experiment can be run with
+```sh
+sudo python run.py [optional args, see -h]
+python plot.py [optional filename suffix]
+```
 
 Running the experiment from scratch
 -----------------------------------

@@ -202,6 +202,10 @@ def genericTest(topo, setup, run, end, type):
 
 def main():
     lg.setLogLevel('info')
+    if os.geteuid() != 0:
+        lg.info("This script uses Mininet, and must be run as root.\n")
+        sys.exit(1)
+
     topo = Wifi3GTopo(bw_wifi=args.bw_wifi,
                       bw_3g=args.bw_3g,
                       latency_wifi='%fms' % (args.latency_wifi,),
