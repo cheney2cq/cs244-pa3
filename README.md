@@ -7,7 +7,7 @@ Replicate Figure 7 of the NSDI paper [How Hard Can It Be? Designing and Implemen
 
 This work was done by CJ Cullen and Stephen Barber for [CS 244](http://cs244.stanford.edu).
 
-The associated blog post is located on the [Reproducing Network Research blog](http://reproducingnetworkresearch.wordpress.com/2014/05/29/cs-244-14-mptcp-latency-on-wifi3g/).
+The associated blog post is located on the [Reproducing Network Research blog](http://reproducingnetworkresearch.wordpress.com/2014/06/02/cs244-14-mptcp-application-latency-over-wifi-and-3g/).
 
 Running the experiment on Amazon EC2
 ------------------------------------
