@@ -11,7 +11,7 @@ The associated blog post is located on the [Reproducing Network Research blog](h
 
 Running the experiment on Amazon EC2
 ------------------------------------
-This experiment is published on Amazon EC2 under CS244-Spr14-MPTCP-Trusty. We used
+This experiment is published on Amazon EC2 (Oregon) under `CS244-Spr14-MPTCP-Trusty`. We used
 a c3.large instance - results may vary depending on the instance.
 
 Running the experiment is simple - in the pa3 directory, simply do
